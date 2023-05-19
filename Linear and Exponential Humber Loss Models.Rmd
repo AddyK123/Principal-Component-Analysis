@@ -1,0 +1,263 @@
+---
+title: "Khera, Aditya AML Pset 2"
+author: "Aditya Khera"
+date: "3/7/2023"
+output: html_document
+always_allow_html: true
+---
+
+## Question 1
+
+### Set-up
+```{r include=FALSE}
+library("ggplot2")
+library("plotly")
+
+```
+
+```{r}
+data <- read.table("/Users/adityakhera/Desktop/AML Practice/Pset 2/gmp.txt")
+population <- data$gmp/data$pcgmp
+X <- log(population)
+data <- cbind(data, population, X)
+```
+
+
+### Question 1.1 Plotting per-capita product
+```{r}
+plot(data$pcgmp ~ data$X, xlab = "log(Population)", ylab = "Per-capita 
+     Gross Metropolitan Product", main = "Scatter plot of GMP and log(population)")
+```
+The plot itself is not necessarily linear. There is a positive correlation between the two variables but also high clustering around log(pop) = 11 and 12 and dispersed data as the log population gets higher. For that reason, the data isn't exactly linear, but does show a positive correlation. 
+
+## Problem 1.2
+#### Defining the function 
+```{r}
+fun12 <- function(beta){
+  b0 <- beta[1]
+  b1 <- beta[2]
+  n <- nrow(data)
+  
+  linear <- b0 + b1 * data$X
+  loss_square <- (data$pcgmp - linear)^2
+  
+  objective <- sum(loss_square)/n
+  return(objective)
+}
+
+beta_test <- c(1, 1)
+fun12(beta_test)
+```
+
+#### Building Contour Plot
+```{r}
+l <- 100
+a <- seq(-100, 100,length=l)
+b <- seq(-100, 100,length=l)
+z <- matrix(0,nrow=l,ncol=l)
+for (i in 1:l) {
+  for (j in 1:l) {
+    z[i,j] <- fun12(c(a[i],b[j]))
+  }
+}
+
+fig <- plot_ly( x = a, y = b, z = z, type = "contour")
+fig
+
+minimizer <- nlm(fun12, p=c(0,0), steptol = 1e-18)
+minimizer
+print(paste("The b0 estimate is", minimizer$estimate[1], "and our estiamte for b1 is", minimizer$estimate[2], "which has an objective function output of", minimizer$minimum))
+
+```
+
+## Problem 1.3
+
+#### Defining the function 
+```{r}
+fun13 <- function(beta){
+  b0 <- beta[1]
+  b1 <- beta[2]
+  n <- nrow(data)
+  
+  exponential <- b0*(data$X^b1)
+  loss_square <- (data$pcgmp - exponential)^2
+  
+  objective <- sum(loss_square)/n
+  return(objective)
+}
+
+beta_test <- c(1, 1)
+fun13(beta_test)
+```
+
+#### Building Contour Plot
+```{r}
+l <- 100
+a <- seq(0, 2000,length=l)
+b <- seq(0, 3,length=l)
+z <- matrix(0,nrow=l,ncol=l)
+for (i in 1:l) {
+  for (j in 1:l) {
+    z[i,j] <- fun13(c(a[i],b[j]))
+  }
+}
+
+fig <- plot_ly( x = a, y = b, z = z, type = "contour")
+fig
+
+minimizer <- nlm(fun13, p=c(0,1), steptol = 1e-18)
+minimizer
+print(paste("The b0 estimate is", minimizer$estimate[1], "and our estiamte for b1 is", minimizer$estimate[2], "which has an objective function output of", minimizer$minimum))
+```
+
+### Humber function
+```{r}
+#Humber Loss
+hloss <- function(x){
+  loss_vec <- ifelse(x^2 > 1, 2*abs(x) - 1, x^2)
+  return(loss_vec)
+}
+```
+
+## Problem 1.4
+#### Objective Function
+```{r}
+fun14 <- function(beta){
+  b0 <- beta[1]
+  b1 <- beta[2]
+  n <- nrow(data)
+  
+  linear <- b0 + b1 * data$X
+  loss_linear_humber <- hloss(data$pcgmp - linear)
+  
+  objective <- sum(loss_linear_humber)/n
+  return(objective)
+}
+
+beta_test <- c(1, 1)
+fun14(beta_test)
+```
+####  Countour Ploting
+```{r}
+l <- 100
+a <- seq(-100, 100,length=l)
+b <- seq(-100,100,length=l)
+z <- matrix(0,nrow=l,ncol=l)
+for (i in 1:l) {
+  for (j in 1:l) {
+    z[i,j] <- fun14(c(a[i],b[j]))
+  }
+}
+
+fig <- plot_ly( x = a, y = b, z = z, type = "contour")
+fig
+
+minimizer <- nlm(fun14, p=c(0,0), steptol = 1e-18)
+minimizer
+print(paste("The b0 estimate is", minimizer$estimate[1], "and our estiamte for b1 is", minimizer$estimate[2], "which has an objective function output of", minimizer$minimum))
+
+```
+
+## Problem 1.5
+#### Defining the function 
+```{r}
+fun15 <- function(beta){
+  b0 <- beta[1]
+  b1 <- beta[2]
+  n <- nrow(data)
+  
+  exponential <- b0*(data$X^b1)
+  exp_linear_humber <- hloss((data$pcgmp - exponential)^2)
+  
+  objective <- sum(exp_linear_humber)/n
+  return(objective)
+}
+
+beta_test <- c(1, 1)
+fun15(beta_test)
+```
+
+#### Building Contour Plot
+```{r}
+l <- 100
+a <- seq(0, 5,length=l)
+b <- seq(5, 15,length=l)
+z <- matrix(0,nrow=l,ncol=l)
+for (i in 1:l) {
+  for (j in 1:l) {
+    z[i,j] <- fun15(c(a[i],b[j]))
+  }
+}
+
+fig <- plot_ly( x = a, y = b, z = z, type = "contour")
+fig
+
+minimizer <- nlm(fun15, p=c(0,1), steptol = 1e-18)
+minimizer
+print(paste("The b0 estimate is", minimizer$estimate[1], "and our estiamte for b1 is", minimizer$estimate[2], "which has an objective function output of", minimizer$minimum))
+```
+
+## Problem 1.6
+#### Defining the function
+```{r}
+fun16 <- function(theta) {
+  b0 <- theta[1]
+  b1 <- theta[2]
+  sig <- theta[3]
+  mean_term <- b0+b1*data$X
+  out <- -1*sum(dnorm(x=data$pcgmp,mean=mean_term,sd=sig,log=T))
+  return(out)
+}
+
+fun16(theta=c(1,1,1))
+
+minimizer <- nlm(fun16, p=c(1,1,1), steptol = 1e-18)
+minimizer
+print(paste("The b0 estimate is", minimizer$estimate[1], "and our estiamte for b1 is", minimizer$estimate[2], "we calculate the standard deviation to be", minimizer$estimate[3], "which has an objective function output of", minimizer$minimum))
+
+```
+
+## Problem 1.7
+#### Defining the function
+```{r}
+fun17 <- function(theta) {
+  b0 <- theta[1]
+  b1 <- theta[2]
+  sig <- theta[3]
+  mean_term <- b0*(data$X^b1)
+  out <- -1*sum(dnorm(x=data$pcgmp,mean=mean_term,sd=sig,log=T))
+  return(out)
+}
+
+fun17(theta=c(1,1,1))
+
+minimizer <- nlm(fun17, p=c(15,1,1), steptol = 1e-18)
+minimizer
+print(paste("The b0 estimate is", minimizer$estimate[1], "and our estiamte for b1 is", minimizer$estimate[2], "we calculate the standard deviation to be", minimizer$estimate[3], "which has an objective function output of", minimizer$minimum))
+
+```
+
+## Problem 1.8
+```{r}
+
+bvalues <- seq(11, 18 ,.25)
+
+exponential13 <- c(440.5*bvalues^ 1.7)
+exponential15 <- c(440.5*bvalues^ 1.7)
+exponential17 <- c(5068.97*bvalues^.75)
+
+
+plot(data$pcgmp ~ data$X, xlab = "log(Population)", ylab = "Per Capita Gross Metropolitan Product",
+     main = "Scatter plot of PCGMP and log(population)")
+abline(-4784.17, 2994.24, data$X, data$pcgmp, col = "blue")
+lines(bvalues, exponential13, lwd = 2, col = "red")
+abline(-4886.03, 2873.17, data$X, data$pcgmp, col = "green")
+lines(bvalues, exponential15, lwd = 2, col = "yellow")
+abline(184.03, 2603.70, data$X, data$pcgmp, col = "purple")
+lines(bvalues, exponential17, lwd = 2, col = "orange")
+
+legend(11.25, 75000, legend=c("Model 1.2", "Model 1.3", "Model 1.4", "Model 1.5", "Model 1.6", "Model 1.7"), col=c("blue", "red", "green", "yellow", "purple", "orange"),lty=1, cex=0.8)
+#Models 1.3 and 1.5 have the same coefficients so they are showing up on top of one another!
+```
+What's very interesting in this plot is the linearity of our exponential models. We see that the exponential beta value usually stays around 1 meaning that even our exponential models look linear on the graph.
+Additionally, we see that the various objective functions and the loss calculations implemented produce fairly consistent estimators. The graphs all fit within the plot and even more interestingly, some manage to overlap on top of one another like the squared and humber loss functions for our exponential models.

@@ -1,0 +1,134 @@
+---
+title: "Khera, Aditya AML Pset 2"
+author: "Aditya Khera"
+date: "3/7/2023"
+output: html_document
+---
+```{r include=FALSE}
+library(MASS)
+```
+
+
+## Question 2
+### Set-up
+```{r}
+train3 <- read.table("/Users/adityakhera/Desktop/AML Practice/Pset 2/train_3.txt", header=FALSE, sep=",")
+n.3 <- nrow(train3)
+
+train8 <- read.table("/Users/adityakhera/Desktop/AML Practice/Pset 2/train_8.txt", header=FALSE, sep=",")
+n.8 <- nrow(train8)
+
+train_label <- c(rep(3, n.3), rep(8, n.8))
+isThree <- ifelse(train_label==3,1,0)
+
+
+zip.test <- read.table("/Users/adityakhera/Desktop/AML Practice/Pset 2/zip_test.txt")
+test <- zip.test[zip.test$V1 == 3 | zip.test$V1 == 8 ,]
+test$V1 <- ifelse(test$V1==3,1,0)
+
+y_train <- rbind(train3, train8)
+```
+
+## Basic LDA
+```{r}
+base_model <- lda(isThree ~ ., data = y_train)
+base_model.p <- predict(base_model, newdata = y_train)$class
+train_vals <- table(base_model.p, isThree)
+print(train_vals)
+acc <- sum(diag(train_vals))/sum(train_vals)
+print(paste("The accuracy of our training LDA is", round(acc, 3)))
+
+
+tested <- predict(base_model, newdata = test)$class
+test_vals <- table(tested, test$V1)
+print(test_vals)
+acc <- sum(diag(test_vals))/sum(test_vals)
+print(paste("The accuracy of our test LDA is", round(acc, 3)))
+```
+
+## PCA for general use
+```{r}
+trainPCA <- prcomp(y_train, scale = T)
+reduced_data <- cbind(trainPCA$x[,1:49])
+reduced_data <- as.data.frame(reduced_data)
+
+reduced_test <- as.matrix(test[-test$V1])
+rotation <- as.matrix(trainPCA$rotation[, 1:49])
+reduced_test <- reduced_test %*% rotation
+reduced_test <- as.data.frame(reduced_test)
+```
+In the code block above, we have performed a PCA on the initial training data set. From this PCA we have selected the 49 most relevant PCs and saved that as our reduced training set data. We then projected those 49 PCs onto the test data to form our reduced testing data set. 
+
+
+## Reduced model LDA
+```{r}
+reduced_base <- lda(isThree ~ ., data = reduced_data)
+reduced_base.p <- predict(reduced_base, newdata = reduced_data)$class
+
+train_vals <- table(reduced_base.p, isThree)
+print(train_vals)
+acc <- sum(diag(train_vals))/sum(train_vals)
+print(paste("The accuracy of our reduced training LDA is", round(acc, 3)))
+
+
+reduced_test_model <- predict(reduced_base, newdata = reduced_test)$class
+
+test_vals <- table(reduced_test_model, test$V1)
+print(test_vals)
+acc <- sum(diag(test_vals))/sum(test_vals)
+print(paste("The accuracy of our reduced test LDA is", round(acc, 3)))
+
+```
+As we can see from the output, our testing error has increased but our testing error has decreased. This is because the training data was relying on 256 variables, likely overfitting the data and thus having a very high level of accuracy. On the other hand, once we fit our model to less variables (49 in this case) we lost some of the accuracy for our training data. This did, however, give the model more flexibility meaning our test accuracy would improve as we no longer overfit the data. 
+
+## Logit model with 256
+```{r}
+logit_base <- glm(isThree~ ., data=y_train,family=binomial("logit"))
+
+linear_pred_train <- predict(logit_base)
+probs_train <- exp(linear_pred_train)/(1+exp(linear_pred_train))
+y_hat_train <- ifelse(probs_train>.5,1,0)
+
+train_vals <- table(y_hat_train, isThree)
+print(train_vals)
+acc <- sum(diag(train_vals))/sum(train_vals)
+print(paste("The accuracy of our training Logit is", round(acc, 3)))
+
+
+linear_pred_test <- predict(logit_base,newdata = test)
+probs_test <- exp(linear_pred_test)/(1+exp(linear_pred_test))
+y_hat_test <- ifelse(probs_test>.5,1,0)
+
+test_vals <- table(y_hat_test, test$V1)
+print(test_vals)
+acc <- sum(diag(test_vals))/sum(test_vals)
+print(paste("The accuracy of our test Logit is", round(acc, 3)))
+
+```
+
+## Logit on reduced data
+```{r}
+reduced_logit <- glm(isThree~ ., data=reduced_data, family=binomial("logit"))
+
+redueced_linear_train <- predict(reduced_logit)
+probs_train <- exp(redueced_linear_train)/(1+exp(redueced_linear_train))
+probs_train[is.na(probs_train)] <- 0
+y_hat_train <- ifelse(probs_train>.5,1,0)
+
+train_vals <- table(y_hat_train, isThree)
+print(train_vals)
+acc <- sum(diag(train_vals))/sum(train_vals)
+print(paste("The accuracy of our reduced training Logit is", round(acc, 3)))
+
+
+linear_pred_test <- predict(reduced_logit,newdata = reduced_test, type = "response")
+y_hat_test <- ifelse(linear_pred_test>.5,1,0)
+
+test_vals <- table(y_hat_test, test$V1)
+print(test_vals)
+acc <- sum(diag(test_vals))/sum(test_vals)
+print(paste("The accuracy of our reduced test Logit is", round(acc, 3)))
+
+```
+
+Very similar story as the LDA runs. As we can see from the output, our testing error has increased but our testing error has decreased significantly. This is because the training data was relying on 256 variables, likely overfitting the data and thus having a very high level of accuracy. On the other hand, once we fit our model to less variables (49 in this case) we lost some of the accuracy for our training data. This did, however, give the model more flexibility meaning our test accuracy would improve as we no longer overfit the data.

@@ -1,0 +1,171 @@
+---
+title: "Problem 4 Setup"
+date: "2/15/2023"
+output: pdf_document
+---
+
+# Source code from Professor
+Please run the following R code chunk to establish the data matrix and test cases used for homework 2 problem 6 (PCA application of the zipcodes data).  The data matrix is constructed by combining digits 3, 5, 8 and then removing three test cases. 
+```{r}
+# Define output.image function (Lab 2)
+output.image<-function(vector) {
+  digit<-matrix(vector, nrow=16, ncol=16)
+  index= seq(from=16, to =1, by=-1)
+  sym_digit = digit[,index]
+  image(sym_digit, col= gray((8:0)/8), axes=FALSE)
+}
+
+# Read in digits features for 3,5,8
+digit_3 <- read.table("/Users/adityakhera/Desktop/AML Practice/Pset 2/train_3.txt",header = F,sep=',')
+digit_5 <- read.table("/Users/adityakhera/Desktop/AML Practice/Pset 2/train_5.txt",header = F,sep=',')
+digit_8 <- read.table("/Users/adityakhera/Desktop/AML Practice/Pset 2/train_8.txt",header = F,sep=',')
+
+# Define temporary data matrix
+X_temp <- rbind(digit_3,digit_5,digit_8)
+dim(X_temp)
+
+# Extract "test" cases
+# Test case 1
+ConstructCase_1 <- X_temp[20,] 
+output.image(as.matrix(ConstructCase_1))
+ConstructCase_1 <- unlist(ConstructCase_1) # Not needed but might be helpful
+
+# Test case 2
+ConstructCase_2 <- X_temp[735,] 
+output.image(as.matrix(ConstructCase_2))
+ConstructCase_2 <- unlist(ConstructCase_2) # Not needed but might be helpful
+
+# Test case 3
+ConstructCase_3 <- X_temp[1260,] 
+output.image(as.matrix(ConstructCase_3))
+ConstructCase_3 <- unlist(ConstructCase_3) # Not needed but might be helpful
+
+# Remove cases 20, 735, 1260 from original dataframe
+X <- X_temp[-c(20,735,1260),]
+dim(X)
+```
+
+
+```{r}
+# Run PCA
+pca_zip <- prcomp(X)
+
+#######################################
+# Approximate case 20
+# ConstructCase_1 is case 20
+#######################################
+
+# Compute inner products 
+c.1 <- sum(pca_zip$rotation[,1]*ConstructCase_1)
+c.1
+c.2 <- sum(pca_zip$rotation[,2]*ConstructCase_1)
+c.2
+
+# Build the approximation of ConstructCase_1
+Case.1_estimate <- c.1*pca_zip$rotation[,1]+c.2*pca_zip$rotation[,2]
+
+# Compare true case versus approximation 
+# Does not look great
+output.image(as.matrix(ConstructCase_1))
+output.image(as.matrix(Case.1_estimate))
+```
+
+
+```{r}
+# Lets try building this approximation using more PC's
+# try d=2,10,50,100,256
+d <- 256
+Case.1_estimate <- rep(0,256)
+for (i in 1:d) {
+   const <- sum(pca_zip$rotation[,i]*ConstructCase_1)
+   Case.1_estimate <- Case.1_estimate + const*pca_zip$rotation[,i]
+}
+
+# Compare true case versus estimate 
+output.image(as.matrix(ConstructCase_1))
+output.image(as.matrix(Case.1_estimate))
+```
+
+# Personal code Starts Here!
+```{r} 
+x.pca <- prcomp(X)
+variance <- (x.pca$sdev)^2
+cvar <- cumsum(variance)/sum(variance)
+thresh <- which(cvar> .90)[1]
+print(paste("The first ", thresh, "principal components contribute 90% of the explained varaince in our set."))
+plot(cvar,col="green")
+lines(cvar,col="green")
+
+```
+
+## Question 4.3
+```{r}
+par(mfrow=c(4,4), mai=c(0.1,0.1, 0.1, 0.1))
+for(j in 1:16) {
+  output.image(as.matrix(x.pca$x[,j]))
+}
+```
+
+#### Building Projections
+```{r}
+d <- 3
+Case.1_estimate_3 <- rep(0,256)
+Case.2_estimate_3 <- rep(0,256)
+Case.3_estimate_3 <- rep(0,256)
+for (i in 1:d) {
+   const1 <- sum(pca_zip$rotation[,i]*ConstructCase_1)
+   Case.1_estimate_3 <- Case.1_estimate_3 + const1*pca_zip$rotation[,i]
+   
+   const2 <- sum(pca_zip$rotation[,i]*ConstructCase_2)
+   Case.2_estimate_3 <- Case.2_estimate_3 + const2*pca_zip$rotation[,i]
+   
+   const3 <- sum(pca_zip$rotation[,i]*ConstructCase_3)
+   Case.3_estimate_3 <- Case.3_estimate_3 + const3*pca_zip$rotation[,i]
+}
+
+d <- 58
+Case.1_estimate_58 <- rep(0,256)
+Case.2_estimate_58 <- rep(0,256)
+Case.3_estimate_58 <- rep(0,256)
+for (i in 1:d) {
+   const1 <- sum(pca_zip$rotation[,i]*ConstructCase_1)
+   Case.1_estimate_58 <- Case.1_estimate_58 + const1*pca_zip$rotation[,i]
+   
+   const2 <- sum(pca_zip$rotation[,i]*ConstructCase_2)
+   Case.2_estimate_58 <- Case.2_estimate_58 + const2*pca_zip$rotation[,i]
+   
+   const3 <- sum(pca_zip$rotation[,i]*ConstructCase_3)
+   Case.3_estimate_58 <- Case.3_estimate_58 + const3*pca_zip$rotation[,i]
+}
+
+d <- 256
+Case.1_estimate_256 <- rep(0,256)
+Case.2_estimate_256 <- rep(0,256)
+Case.3_estimate_256 <- rep(0,256)
+for (i in 1:d) {
+   const1 <- sum(pca_zip$rotation[,i]*ConstructCase_1)
+   Case.1_estimate_256 <- Case.1_estimate_256 + const1*pca_zip$rotation[,i]
+   
+   const2 <- sum(pca_zip$rotation[,i]*ConstructCase_2)
+   Case.2_estimate_256 <- Case.2_estimate_256 + const2*pca_zip$rotation[,i]
+   
+   const3 <- sum(pca_zip$rotation[,i]*ConstructCase_3)
+   Case.3_estimate_256 <- Case.3_estimate_256 + const3*pca_zip$rotation[,i]
+}
+
+
+```
+
+```{r}
+par(mfrow= c(3,3))
+output.image(Case.1_estimate_3)
+output.image(Case.2_estimate_3)
+output.image(Case.3_estimate_3)
+output.image(Case.1_estimate_58)
+output.image(Case.2_estimate_58)
+output.image(Case.3_estimate_58)
+output.image(Case.1_estimate_256)
+output.image(Case.2_estimate_256)
+output.image(Case.3_estimate_256)
+```
+

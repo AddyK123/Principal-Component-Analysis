@@ -1,0 +1,87 @@
+---
+title: "Homework 2 Question 3"
+output: pdf_document
+author: "Aditya Khera"
+date: "2023-03-20"
+---
+
+```{r include=FALSE}
+library(quantmod)
+
+```
+
+## Setup and Data Pull
+```{r}
+tickers <- c("AXP", "AMGN", "AAPL", "BA", "CAT", "CSCO", "CVX", "GS", "HD", "HON", "IBM", "INTC", "JNJ", "KO", "JPM", "MCD", "MMM", "MRK", "MSFT", "NKE", "PG", "TRV", "UNH", "CRM", "VZ", "V", "WBA", "WMT", "DIS", "DOW")
+
+
+output <- getSymbols(tickers[1], auto.assign = F, from="2022-01-01", to = "2023-01-01")
+open <- output[,1]
+close <- output[,4]
+return <- close - open
+
+close_data <- close
+return_data <- return
+
+for(i in 2:length(tickers)){
+  output <- getSymbols(tickers[i], auto.assign = F, from="2022-01-01", to = "2023-01-01")
+  close <- output[,4]
+  open <- output[,1]
+  return <- close - open
+
+  close_data <- cbind(close_data, close)
+  return_data <- cbind(return_data, return)
+}
+
+```
+
+## Unscaled PDA
+```{r}
+pca.unscaled <- prcomp(close_data)
+biplot(pca.unscaled)
+screeplot(pca.unscaled, type="l")
+```
+
+The biplot for our unscaled PCA is very crowded, likely because of the names of our variables and observations. There is a lack of orthogonality to the unscaled data, both PC1 and PC2 are impacted by the data, rather than just one or the other. There is likely a slight negative correlation between the data and PC1. Additionally, data that contributes positively to PC2 also contribute positively to PC1, we can see this indicated by the positive vectors going from the origin to the "first quadrant"
+
+At a first glance, the scree plot shows use that a majority of the variance of our data set is explained by the first four PCs. We can say that after 4 PCs the variance or effect of the PCs diminishes significantly. 
+
+
+```{r}
+variance <- (pca.unscaled$sdev)^2
+cvar <- cumsum(variance)/sum(variance)
+plot(cvar,col="green")
+lines(cvar,col="green")
+```
+
+## Scaled Data
+```{r}
+scaled <- scale(close_data,center=TRUE, scale=FALSE)
+pca.scaled <- prcomp(scaled)
+biplot(pca.scaled)
+screeplot(pca.scaled, type="l")
+
+```
+The biplot for our scaled PCA is similarly very crowded. Once again, we can see two clusters for our observations. The PCs and our eigenvectors also show a general trend for a positive PC2. Scaled closing values tended to have a moderately strong positive correlation with PC2, through the PC1 did not have a clear trend. 
+
+Similar to the unscaled scree plot, a majority of the variance of our data set is explained by the first four PCs. We can say that after 4 PCs the variance or effect of the PCs diminishes significantly. 
+
+```{r}
+variance <- (pca.scaled$sdev)^2
+cvar <- cumsum(variance)/sum(variance)
+plot(cvar,col="green")
+lines(cvar,col="green")
+```
+## Scaled PCA of Returns
+```{r}
+return_scaled <- scale(return_data,center=TRUE, scale=FALSE)
+return.pca <- prcomp(return_scaled)
+biplot(return.pca)
+screeplot(return.pca, type="l")
+```
+The biplot of our scaled return data is very interesting. We see one large cluster, which implies that day to day returns for our period of observation were pretty similar, there were no major fluctuations (such as sharp rises or crashes) during the time. Additionally, we see a very stron negative relationship for our PC1 and much smaller positive relationship with PC2. This implies that PC1 is contributing much more to the variance of our data set compared to PC2. 
+
+This is further shown by the scree plot which is dominated by the first PC. We see a sharp decline after the first PC but overall the variance is primarily attributed to the first two PCs of our return data set. This likely means that there is one major factor contributing to the day to day returns for our stocks, this could be represented as the underlying stock market as a whole.
+
+If each stock were fluctuating up and down randomly and independent of all the other stocks, we could expect the scree plot to look like a horizontal line. There is no shared source of variance so all the PCs would have an equal effect or share of the cumulative variance. Since the stocks likely fluctuate with one another, the scree plot does not look like a horizontal line.
+
