@@ -16,7 +16,7 @@ library("plotly")
 ```
 
 ```{r}
-data <- read.table("/Users/adityakhera/Desktop/AML Practice/Pset 2/gmp.txt")
+data <- read.table("/Users/adityakhera/Documents/GitHub/Principal-Component-Analysis/Training/gmp.txt")
 population <- data$gmp/data$pcgmp
 X <- log(population)
 data <- cbind(data, population, X)

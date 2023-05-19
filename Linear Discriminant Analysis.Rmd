@@ -12,17 +12,17 @@ library(MASS)
 ## Question 2
 ### Set-up
 ```{r}
-train3 <- read.table("/Users/adityakhera/Desktop/AML Practice/Pset 2/train_3.txt", header=FALSE, sep=",")
+train3 <- read.table("/Users/adityakhera/Documents/GitHub/Principal-Component-Analysis/Training/train_3.txt", header=FALSE, sep=",")
 n.3 <- nrow(train3)
 
-train8 <- read.table("/Users/adityakhera/Desktop/AML Practice/Pset 2/train_8.txt", header=FALSE, sep=",")
+train8 <- read.table("/Users/adityakhera/Documents/GitHub/Principal-Component-Analysis/Training/train_8.txt", header=FALSE, sep=",")
 n.8 <- nrow(train8)
 
 train_label <- c(rep(3, n.3), rep(8, n.8))
 isThree <- ifelse(train_label==3,1,0)
 
 
-zip.test <- read.table("/Users/adityakhera/Desktop/AML Practice/Pset 2/zip_test.txt")
+zip.test <- read.table("/Users/adityakhera/Documents/GitHub/Principal-Component-Analysis/Training/zip_test.txt")
 test <- zip.test[zip.test$V1 == 3 | zip.test$V1 == 8 ,]
 test$V1 <- ifelse(test$V1==3,1,0)
 

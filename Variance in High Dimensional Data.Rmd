@@ -16,9 +16,9 @@ output.image<-function(vector) {
 }
 
 # Read in digits features for 3,5,8
-digit_3 <- read.table("/Users/adityakhera/Desktop/AML Practice/Pset 2/train_3.txt",header = F,sep=',')
-digit_5 <- read.table("/Users/adityakhera/Desktop/AML Practice/Pset 2/train_5.txt",header = F,sep=',')
-digit_8 <- read.table("/Users/adityakhera/Desktop/AML Practice/Pset 2/train_8.txt",header = F,sep=',')
+digit_3 <- read.table("/Users/adityakhera/Documents/GitHub/Principal-Component-Analysis/Training/train_3.txt",header = F,sep=',')
+digit_5 <- read.table("/Users/adityakhera/Documents/GitHub/Principal-Component-Analysis/Training/train_5.txt",header = F,sep=',')
+digit_8 <- read.table("/Users/adityakhera/Documents/GitHub/Principal-Component-Analysis/Training/train_8.txt",header = F,sep=',')
 
 # Define temporary data matrix
 X_temp <- rbind(digit_3,digit_5,digit_8)
